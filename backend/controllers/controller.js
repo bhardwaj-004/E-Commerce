@@ -69,7 +69,14 @@ const login = async(req,res) => {
         })
     }
 }
+const me = (req,res) =>{
+    res.json({
+        message: "User information",
+        user: req.user
+    });
+};
 module.exports = {
     register,
-    login
+    login,
+    me
 }
