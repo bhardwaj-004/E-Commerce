@@ -2,12 +2,10 @@ async function register() {
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const response = await fetch(
-        "http://localhost:3000/auth/register",
+    const response = await fetch("http://localhost:3000/auth/register",
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
+            headers: {"Content-Type": "application/json"
             },
             body: JSON.stringify({
                 name,
@@ -38,12 +36,4 @@ async function login() {
         localStorage.setItem("token", data.token);
         console.log("JWT:",data.token);
     }
-}
-async function getprofile(){
-    const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:3000/auth/me",{
-        headers:{"Authorization":"Bearer" + token}
-    });
-    const data = await response.json();
-    document.getElementById("profileMessage").innerText = JSON.stringify(data); 
 }
