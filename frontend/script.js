@@ -37,3 +37,8 @@ async function login() {
         console.log("JWT:",data.token);
     }
 }
+async function getusers(){
+    const response = await fetch("http://localhost:3000/auth/users");
+    const data = await response.json();
+    document.getElementById("usersMessage").innerText = JSON.stringify(data);
+}

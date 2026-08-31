@@ -68,15 +68,24 @@ const login = async(req,res) => {
             message: "Server Error"
         })
     }
-}
+};
 const me = (req,res) =>{
     res.json({
         message: "User information",
         user: req.user
     });
 };
+const getUsers = (req,res) =>{
+    const userlist = users.map(user=>({
+        id: user.id,
+        name: user.name,
+        email: user.email
+    }));
+    res.json(userlist);
+};
 module.exports = {
     register,
     login,
-    me
-}
+    me,
+    getUsers
+};
