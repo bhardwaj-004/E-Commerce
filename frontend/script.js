@@ -22,8 +22,7 @@ async function login() {
     const password = document.getElementById("loginPassword").value;  
     const response = await fetch("http://localhost:3000/auth/login",{
         method:"POST",
-        headers:{
-            "content-type":"application/json"
+        headers:{"content-type":"application/json"
         },
         body:JSON.stringify({
             email,
