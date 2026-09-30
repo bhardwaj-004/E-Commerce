@@ -1,24 +1,32 @@
-const bcrypt = require("bcrypt");
-const users = require("../models/usermodel");
-const jwt = require("jsonwebtoken")
-const register = async(req, res)=>{
-    try{
-        const{name,email,password} = req.body;
-        //checks if the user already exsists
-        const exsists = users.find(user => user.email === email);
-        if(exsists){
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { Request, Response } from "express";
+import users from "../models/usermodel";
+
+interface AuthRequest extends Request {
+    user?: string | jwt.JwtPayload;
+}
+const register = async (req: Request, res: Response) => {
+    try {
+        const { name, email, password } = req.body;
+
+        const exists = users.find(user => user.email === email);
+
+        if (exists) {
             return res.status(400).json({
-                message:"user already exists"
+                message: "user already exists"
             });
         }
-        const hashpass = await bcrypt.hash(password,10);
-        const user = { 
+
+        const hashpass = await bcrypt.hash(password, 10);
+        const user = {
             id: users.length + 1,
             name,
             email,
             password: hashpass
         };
         users.push(user);
+
         res.status(201).json({
             message: "User registered successfully",
             user: {
@@ -27,26 +35,26 @@ const register = async(req, res)=>{
                 email: user.email
             }
         });
-    }catch(error){
+    } catch (error) {
         res.status(500).json({
             message: "Server error"
         });
     }
 };
 
-const login = async(req,res) => {
-    try{
-        const{email, password} = req.body;
+const login = async (req: Request, res: Response) => {
+    try {
+        const { email, password } = req.body;
         const user = users.find(user => user.email === email);
-        if(!user){
+        if (!user) {
             return res.status(404).json({
                 message: "user not found"
             });
         }
-        const ismatch = await bcrypt.compare(password, user.password);
-        if(!ismatch){
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({
-                message:"Invalid password"
+                message: "Invalid password"
             });
         }
         const token = jwt.sign(
@@ -56,34 +64,35 @@ const login = async(req,res) => {
             },
             "mysecretkey",
             {
-                expiresIn:"1h"
+                expiresIn: "1h"
             }
         );
         res.json({
             message: "Login successful",
             token
-        })
-    }catch(error){
+        });
+    } catch (error) {
         res.status(500).json({
             message: "Server Error"
-        })
+        });
     }
 };
-const me = (req,res) =>{
+const me = (req: AuthRequest, res: Response) => {
     res.json({
         message: "User information",
         user: req.user
     });
 };
-const getUsers = (req,res) =>{
-    const userlist = users.map(user=>({
+const getUsers = (req: Request, res: Response) => {
+    const userlist = users.map(user => ({
         id: user.id,
         name: user.name,
         email: user.email
     }));
+
     res.json(userlist);
 };
-module.exports = {
+export {
     register,
     login,
     me,

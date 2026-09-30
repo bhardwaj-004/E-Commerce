@@ -41,3 +41,15 @@ async function getusers(){
     const data = await response.json();
     document.getElementById("usersMessage").innerText = JSON.stringify(data);
 }
+
+async function getMe() {
+    const token = localStorage.getItem("token");
+    const response = await fetch("http://localhost:3000/auth/me", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+    const data = await response.json();
+    document.getElementById("usersMessage").innerText =
+        JSON.stringify(data);
+}
