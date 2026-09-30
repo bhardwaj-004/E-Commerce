@@ -1,11 +1,15 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Request, Response } from "express";
+import express, { Request, Response } from "express";
 import users from "../models/usermodel";
+import authMiddleware from "../middleware/authmiddleware";
 
 interface AuthRequest extends Request {
     user?: string | jwt.JwtPayload;
 }
+
+const router = express.Router();
+
 const register = async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
@@ -92,9 +96,9 @@ const getUsers = (req: Request, res: Response) => {
 
     res.json(userlist);
 };
-export {
-    register,
-    login,
-    me,
-    getUsers
-};
+//routes
+router.post("/register", register);
+router.post("/login", login);
+router.get("/me", authMiddleware, me);
+router.get("/users", getUsers);
+export default router;
