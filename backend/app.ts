@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 mongoose.connect(process.env.MONGO_URI as string).then(() =>{
@@ -18,7 +19,3 @@ mongoose.connect(process.env.MONGO_URI as string).then(() =>{
 });
 
 app.use("/auth", route);
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`server running on port ${PORT}`);
-});
