@@ -17,11 +17,12 @@ const authMiddleware = (
     }
     const token = authHeader.split(" ")[1];
     try {
-        const decoded = jwt.verify(token, "mysecretkey");
-        req.user = decoded;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+        if(typeof decoded === "object" && "id" in decoded){
+            req.user = decoded.id as string;
+        }
         next();
-    } catch {
-
+    } catch (error){
         return res.status(401).json({
             message: "Invalid token"
         });

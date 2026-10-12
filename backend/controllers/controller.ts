@@ -1,45 +1,43 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import express, { Request, Response } from "express";
-import users from "../models/usermodel";
+import User from "../models/usermodel";
 import authMiddleware from "../middleware/authmiddleware";
 
 interface AuthRequest extends Request {
     user?: string | jwt.JwtPayload;
 }
-
 const router = express.Router();
-
 const register = async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
-
-        const exists = users.find(user => user.email === email);
-
-        if (exists) {
+        if (!name || !email || !password) {
             return res.status(400).json({
-                message: "user already exists"
+                message: "Name, email and password are required"
             });
         }
-
-        const hashpass = await bcrypt.hash(password, 10);
-        const user = {
-            id: users.length + 1,
+        const existingUser = await User.findOne({email});
+        if (existingUser) {
+            return res.status(400).json({
+                message: "User already exists"
+            });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await User.create({
             name,
             email,
-            password: hashpass
-        };
-        users.push(user);
-
+            password: hashedPassword
+        });
         res.status(201).json({
-            message: "User registered successfully",
+            message: "user registered successfully",
             user: {
-                id: user.id,
+                id: user._id,
                 name: user.name,
                 email: user.email
             }
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json({
             message: "Server error"
         });
@@ -49,24 +47,28 @@ const register = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
-        const user = users.find(user => user.email === email);
+        const user = await User.findOne({email});
+
         if (!user) {
-            return res.status(404).json({
-                message: "user not found"
+            return res.status(401).json({
+                message: "Invalid email or password"
             });
         }
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
+        const passwordMatch = await bcrypt.compare(
+            password,
+            user.password
+        );
+        if (!passwordMatch) {
             return res.status(401).json({
-                message: "Invalid password"
+                message: "Invalid email or password"
             });
         }
         const token = jwt.sign(
             {
-                id: user.id,
+                id: user._id,
                 email: user.email
             },
-            "mysecretkey",
+            process.env.JWT_SECRET as string,
             {
                 expiresIn: "1h"
             }
@@ -76,29 +78,35 @@ const login = async (req: Request, res: Response) => {
             token
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json({
-            message: "Server Error"
+            message: "Server error"
         });
     }
 };
-const me = (req: AuthRequest, res: Response) => {
-    res.json({
-        message: "User information",
-        user: req.user
-    });
-};
-const getUsers = (req: Request, res: Response) => {
-    const userlist = users.map(user => ({
-        id: user.id,
-        name: user.name,
-        email: user.email
-    }));
 
-    res.json(userlist);
+const me = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
 };
-//routes
 router.post("/register", register);
 router.post("/login", login);
 router.get("/me", authMiddleware, me);
-router.get("/users", getUsers);
 export default router;
